@@ -64,6 +64,22 @@ public class MainActivity extends AppCompatActivity {
 
             }
         });
+
+        final Button resetButton = (Button) findViewById(R.id.resetButton);
+        resetButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                score = 0;
+                time = 10d;
+                isPlaying = false;
+                handler.removeCallbacks(timeRunnable);
+                startButton.setText("START");
+                timeView.setText("Time: 10");
+                scoreView.setText("Score: 0");
+
+            }
+        });
+
     }
 
     @Override
