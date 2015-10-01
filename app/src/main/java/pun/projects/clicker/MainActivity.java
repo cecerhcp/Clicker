@@ -11,6 +11,14 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
 
+import android.database.sqlite.SQLiteDatabase;
+import android.content.Context;
+import android.database.Cursor;
+
+import android.content.Intent;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Collections;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -20,6 +28,7 @@ public class MainActivity extends AppCompatActivity {
     private boolean isPlaying = false;
     private TextView timeView = null;
     private TextView scoreView = null;
+    private SQLiteDatabase db = null;
     private Handler handler = new Handler();
     private Runnable timeRunnable = new Runnable(){
         public void run() {
@@ -32,10 +41,15 @@ public class MainActivity extends AppCompatActivity {
             else
             {
                 isPlaying = false;
+                if (isHighscore(score))
+                {
+                    db.execSQL("INSERT INTO score VALUES(NULL, 'nome', " + score.toString() + ");");
+                }
 
             }
         }
     };
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -43,6 +57,8 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
         scoreView = (TextView) findViewById(R.id.scoreView);
         timeView = (TextView) findViewById(R.id.timeView);
+        db = openOrCreateDatabase("ScoreDB", Context.MODE_PRIVATE, null);
+        db.execSQL("CREATE TABLE IF NOT EXISTS score(_id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR, score INTEGER);");
 
 
 
@@ -76,12 +92,34 @@ public class MainActivity extends AppCompatActivity {
                 startButton.setText("START");
                 timeView.setText("Time: 10");
                 scoreView.setText("Score: 0");
+        }});
 
-            }
-        });
 
     }
 
+
+    public Boolean isHighscore(Integer value)
+    {
+        List<Integer> list = new ArrayList<Integer>();
+        Cursor c = db.rawQuery("SELECT * FROM score", null);
+        if(c.moveToFirst())
+        {
+            list.add(Integer.parseInt(c.getString(2)));
+        }
+        else return true;
+
+        while (c.moveToNext())
+        {
+            list.add(Integer.parseInt(c.getString(2)));
+        }
+        Collections.sort(list);
+        int i;
+        if (list.size() >= 10) i = 9;
+        else return true;
+        if (value > list.get(i)) return true;
+        else return false;
+
+    }
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -98,7 +136,8 @@ public class MainActivity extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_settings) {
-            return true;
+            Intent intent = new Intent(this, ScoreActivity.class);
+            startActivity(intent);
         }
 
         return super.onOptionsItemSelected(item);
